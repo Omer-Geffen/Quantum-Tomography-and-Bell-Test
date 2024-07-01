@@ -1,0 +1,28 @@
+v= VideoReader('-45+112.5.mp4');
+numFrames = v.NumFrames;  
+D2 = zeros(1, numFrames); 
+
+%To check the coordinates 
+%frame = read(v, 85);
+%pcolor(frame(:,:,1))
+
+for i = 1:numFrames
+    frame = read(v, i);
+    %frame(y_bottom:y_top,x_left:x_right,1)
+    %Alice H (1)
+    %D2(i)=sum(sum(frame(1:2,3:4,1)));
+    %Alice V (2)
+    D2(i)=sum(sum(frame(464:558,1013:1182,1)));
+    %Bob H (3)
+    %D2(i)=sum(sum(frame(1:2,3:4,1)));
+    %Bob V (4)
+    %D2(i)=sum(sum(frame(388:488,559:725,1)));
+end
+
+
+Dex=transpose(D2);
+figure;
+plot(D2);
+xlabel('Frame Number');
+ylabel('Sum of Pixel Values');
+title('Intensity in Each frame');
