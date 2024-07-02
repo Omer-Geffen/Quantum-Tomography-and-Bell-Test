@@ -1,0 +1,79 @@
+from qiskit import Aer, QuantumRegister, ClassicalRegister, QuantumCircuit, execute
+from qiskit.visualization import plot_histogram
+from qiskit.quantum_info import DensityMatrix, partial_trace
+import numpy as np
+from matplotlib.pyplot import *
+#### Version qiskit==0.46 is used####
+# Defining the QST function
+def QST(theta, phi, bell):
+    simulator = Aer.get_backend('qasm_simulator')
+
+    # Initialize quantum and classical registers
+    aliceQubits = QuantumRegister(1, "a")
+    bobQubits = QuantumRegister(1, "b")
+    aliceCBits = ClassicalRegister(1, "ac")
+    bobCBits = ClassicalRegister(1, "bc")
+
+    # Create the quantum circuit
+    circuit = QuantumCircuit(aliceQubits, bobQubits, aliceCBits, bobCBits)
+    # We start with |00>
+    circuit.u(phi,theta, 0, aliceQubits[0])  # It applies the U gate on A's qubit:
+    # |00>-->(cos(theta/2)|0>+exp(i*phi)sin(theta/2)|1>)|0>
+    # Create a bell state
+    circuit.h(aliceQubits[0])  # The hadamard gate/Beam spliter
+    circuit.cx(aliceQubits[0], bobQubits[0])
+    # CNOT gate (e.g., |00>+|11>-->|00>+|10>)
+    # It flips Bob's state if Alice's state is 1, and does nothing if it is 0
+
+    # We get the state cos(theta/2)|00>+exp(i*phi)sin(theta/2)|11>
+
+    # Adding an option to change it to another bell state
+    if bell=="HV+VH" or bell=="VH+HV":
+        circuit.x(aliceQubits[0])
+        # It flips Alice's qubit (this is the Pauli matrix sigma_x)
+    # Adding measurements for simulation
+    circuit.measure(aliceQubits, aliceCBits)
+    circuit.measure(bobQubits, bobCBits)
+
+    circuit.draw(output="mpl", style="iqp", filename="my_circuit.png")
+    show()
+
+    # Execute the simulation on simulator
+    #rhod={}
+    for n in [10,100,1000,10000]: # n is the number of coincidences
+        job = execute(circuit, simulator, shots=n)
+        result_sim = job.result()
+        counts = result_sim.get_counts(circuit)
+        #print(counts)
+        all_counts=sum(counts.values())
+        known_states = ['1 1', '0 1', '1 0', '0 0']
+        for key in known_states:
+            if key not in counts:
+                counts[key] = 0
+        prob_dict = {key: value / all_counts for key, value in counts.items()}
+        # Assuming no complex coefficients
+        c_HH,c_HV,c_VH,c_VV=np.sqrt(prob_dict["1 1"]),np.sqrt(prob_dict["1 0"]),np.sqrt(prob_dict["0 1"]),np.sqrt(prob_dict["0 0"])
+        rho = np.array([[abs(c_HH) ** 2, c_HV * np.conj(c_HH), c_VH * np.conj(c_HH), c_VV * np.conj(c_HH)],
+                        [c_HH * np.conj(c_HV), abs(c_HV) ** 2, c_VH * np.conj(c_HV), c_VV * np.conj(c_HV)],
+                        [c_HH * np.conj(c_VH), c_HV * np.conj(c_VH), abs(c_VH) ** 2, c_VV * np.conj(c_VH)],
+                        [c_HH * np.conj(c_VV), c_HV * np.conj(c_VV), c_VH * np.conj(c_VV), abs(c_VV) ** 2]])
+        #rhod["rho for " + str(n) + " coincidence:"] = rho
+        print("rho for " + str(n) + " coincidences:")
+        print(rho)
+        #print("Measurement Counts:\n", counts)
+        #print("probabilities:\n", prob_dict)
+        #print("rho=",rho)
+
+# For bell=HH+VV
+bell="HH+VV"
+print(bell)
+# Chose theta and phi: |psi>=cos(theta/2)|00>+exp(i*phi)sin(theta/2)|11>
+# QST(theta, phi, bell)
+QST(np.pi/2,0,bell)
+# Now same but for the state 1/sqrt(2)[|HV>+|VH>]
+bell="HV+VH"
+print(bell)
+QST(np.pi/2,0,bell)
+# Note that this cod only works for the bell states
+# And it can be easily modified to account for states such as in Eq.11, assuming no complex coefficients
+
