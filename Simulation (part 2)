@@ -17,12 +17,8 @@ def QST(theta, phi, bell):
     # Create the quantum circuit
     circuit = QuantumCircuit(aliceQubits, bobQubits, aliceCBits, bobCBits)
     # We start with |00>
-    circuit.u(phi,theta, 0, aliceQubits[0])  # It applies the U gate on A's qubit:
+    circuit.u(theta,phi, 0, aliceQubits[0])  # It applies the U gate on A's qubit:
     # |00>-->(cos(theta/2)|0>+exp(i*phi)sin(theta/2)|1>)|0>
-    # Create a bell state
-    circuit.h(aliceQubits[0])  # The hadamard gate, can be thought as a beam splitter in the spin space
-    # It can also be thought of as a quarter-wave plate
-    # That is, it rotates the state: |0/1>-->|+/-> ; H=1/sqrt(2)*matrix_2x2(first row 1,1 second row 1,-1)
     circuit.cx(aliceQubits[0], bobQubits[0])
     # CNOT gate (e.g., |00>+|11>-->|00>+|10>)
     # It flips Bob's state if Alice's state is 1, and does nothing if it is 0
