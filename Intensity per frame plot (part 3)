@@ -1,0 +1,14 @@
+T = readtable("sample.xls");
+A=T.Alice;
+B=T.Bob;
+L=length(A);
+fr=1:L;
+thresh=222000+zeros(1,L);
+plot(fr, A, "r")
+hold on
+plot(fr, B, "b")
+plot(fr, thresh, "--k")
+title('Intensity for each frame. For angles -45, -22.5')
+xlabel('Frame Number [1/30sec]') 
+ylabel('Intensity') 
+hold off
